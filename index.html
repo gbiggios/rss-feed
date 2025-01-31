@@ -105,22 +105,31 @@
     </div>
 
     <script>
-        const rssFeedBaseUrl = "https://api.rss2json.com/v1/api.json?rss_url=https://noticiasorquestalimapu.blogspot.com/feeds/posts/default";
+        const rssFeedUrl = "https://noticiasorquestalimapu.blogspot.com/feeds/posts/default";
+        const corsProxy = "https://api.allorigins.win/get?url="; // Proxy para evitar CORS
         const itemsPerPage = 5; // Cantidad de noticias por página
         let currentPage = 1;
         let newsItems = [];
 
         async function fetchRSS() {
             try {
-                // Se agrega un parámetro único para evitar la caché
-                const timestamp = new Date().getTime();
-                const response = await fetch(`${rssFeedBaseUrl}&nocache=${timestamp}`);
+                // Obtener el feed RSS a través del proxy
+                const response = await fetch(`${corsProxy}${encodeURIComponent(rssFeedUrl)}`);
                 const data = await response.json();
+                const parser = new DOMParser();
+                const xml = parser.parseFromString(data.contents, "application/xml");
+                const entries = xml.getElementsByTagName("entry");
 
-                if (data.status === "ok") {
-                    newsItems = data.items;
-                    renderPage();
-                }
+                newsItems = Array.from(entries).map(entry => {
+                    const title = entry.getElementsByTagName("title")[0].textContent;
+                    const link = Array.from(entry.getElementsByTagName("link")).find(
+                        el => el.getAttribute("rel") === "alternate"
+                    ).getAttribute("href");
+                    const summary = entry.getElementsByTagName("summary")[0]?.textContent || "Sin descripción.";
+                    return { title, link, description: summary };
+                });
+
+                renderPage();
             } catch (error) {
                 console.error("Error al cargar el feed:", error);
             }
@@ -138,7 +147,7 @@
                 const listItem = document.createElement("li");
 
                 // Mostrar solo un resumen de la noticia (primeros 150 caracteres)
-                const shortDescription = item.description.length > 150 
+                const shortDescription = item.description.length > 500 
                     ? item.description.substring(0, 150) + "..." 
                     : item.description;
 
