@@ -95,6 +95,14 @@
             return dom.body.textContent || "";
         }
 
+        function decodeSpecialCharacters(text) {
+            try {
+                return decodeURIComponent(escape(text));
+            } catch (e) {
+                return text; // Devuelve el texto original si falla la decodificación
+            }
+        }
+
         async function fetchRSS() {
             try {
                 console.log("📡 Fetching RSS...");
@@ -143,7 +151,7 @@
                         summary = entry.getElementsByTagName("content")[0]?.textContent || "Sin descripción.";
                     }
 
-                    summary = decodeHTMLEntitiesAdvanced(summary.replace(/<\/?[^>]+(>|$)/g, ""));
+                    summary = decodeSpecialCharacters(decodeHTMLEntitiesAdvanced(summary.replace(/<\/?[^>]+(>|$)/g, "")));
 
                     return { title, link, summary };
                 });
