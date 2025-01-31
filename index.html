@@ -8,7 +8,7 @@
     <style>
         body {
             font-family: 'Lora', serif;
-            background-color: #FFD600; /* Fondo amarillo */
+            background-color: #FFD936; /* Fondo amarillo */
             color: #333;
             max-width: 800px;
             margin: auto;
@@ -104,7 +104,7 @@
 
     <script>
         const rssFeedUrl = "https://noticiasorquestalimapu.blogspot.com/feeds/posts/default?max-results=10";
-        const corsProxy = "https://api.allorigins.win/get?url="; // Proxy para evitar CORS
+        const corsProxy = "https://api.allorigins.win/get?url="; // Proxy gratuito para evitar problemas de CORS
         const itemsPerPage = 5;
         let currentPage = 1;
         let newsItems = [];
@@ -118,17 +118,18 @@
                 const xml = parser.parseFromString(data.contents, "application/xml");
                 const entries = xml.getElementsByTagName("entry");
 
-                if (entries.length === 0) {
+                if (!entries || entries.length === 0) {
                     document.getElementById("rss-feed").innerHTML = "<p>No hay noticias disponibles.</p>";
                     return;
                 }
 
                 // Procesar todas las entradas del feed
                 newsItems = Array.from(entries).map(entry => {
-                    const title = entry.getElementsByTagName("title")[0].textContent;
-                    const link = Array.from(entry.getElementsByTagName("link")).find(
+                    const title = entry.getElementsByTagName("title")[0]?.textContent || "Sin título";
+                    const linkElement = Array.from(entry.getElementsByTagName("link")).find(
                         el => el.getAttribute("rel") === "alternate"
-                    ).getAttribute("href");
+                    );
+                    const link = linkElement ? linkElement.getAttribute("href") : "#";
                     const summary = entry.getElementsByTagName("summary")[0]?.textContent || "Sin descripción.";
                     return { title, link, summary };
                 });
