@@ -147,6 +147,25 @@
             }
         }
 
+        function renderNews(newsItems) {
+            const feedContainer = document.getElementById("rss-feed");
+            feedContainer.innerHTML = "";
+
+            newsItems.forEach(item => {
+                const listItem = document.createElement("li");
+                const shortDescription = item.summary.length > 150 
+                    ? item.summary.substring(0, 150) + "..." 
+                    : item.summary;
+
+                listItem.innerHTML = `
+                    <h4><a href="${item.link}" target="_blank">${item.title}</a></h4>
+                    <p>${shortDescription}</p>
+                `;
+
+                feedContainer.appendChild(listItem);
+            });
+        }
+
         fetchRSS();
     </script>
 </body>
