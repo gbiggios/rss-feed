@@ -73,12 +73,11 @@
     <h2>Últimas Noticias</h2>
     <ul id="rss-feed"></ul>
 
-    <!-- Botón para ir al blog completo -->
     <a href="https://noticiasorquestalimapu.blogspot.com/" target="_blank" id="viewAllBtn">Ver todas las noticias</a>
 
     <script>
         const rssFeedUrl = "https://noticiasorquestalimapu.blogspot.com/feeds/posts/default?max-results=5";
-        const corsProxy = "https://api.allorigins.win/get?url="; // Proxy gratuito para evitar problemas de CORS
+        const corsProxy = "https://api.allorigins.win/get?url=";
         const maxNewsItems = 5;
 
         function decodeHTMLEntitiesAdvanced(text) {
@@ -95,12 +94,22 @@
                 if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
                 
                 const data = await response.json();
-                const utf8Decoder = new TextDecoder("utf-8");
-                const decodedText = utf8Decoder.decode(new Uint8Array([...data.contents].map(c => c.charCodeAt(0))));
+                console.log("🔍 Data received:", data);
+
+                if (!data.contents) {
+                    throw new Error("El contenido de la respuesta está vacío o malformado");
+                }
                 
                 const parser = new DOMParser();
-                const xml = parser.parseFromString(decodedText, "application/xml");
+                const xml = parser.parseFromString(data.contents, "application/xml");
 
+                if (xml.querySelector("parsererror")) {
+                    console.error("Error al parsear el XML", xml.querySelector("parsererror").textContent);
+                    throw new Error("No se pudo analizar el XML");
+                }
+
+                console.log("📜 XML Parsed:", xml);
+                
                 const entries = xml.getElementsByTagName("entry");
                 if (!entries || entries.length === 0) {
                     document.getElementById("rss-feed").innerHTML = "<p>No hay noticias disponibles.</p>";
@@ -120,10 +129,10 @@
                     }
 
                     summary = decodeHTMLEntitiesAdvanced(summary.replace(/<\/?[^>]+(>|$)/g, ""));
-
                     return { title, link, summary };
                 });
 
+                console.log("📰 News items parsed:", newsItems);
                 renderNews(newsItems);
             } catch (error) {
                 console.error("❌ Error al cargar el feed:", error);
