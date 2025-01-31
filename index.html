@@ -86,7 +86,7 @@
         }
 
         #pageNum {
-            font-family: 'Anton', sans-serif;
+            font-family: 'Anton', sans-serif';
             font-size: 1.2rem;
             margin: 0 10px;
         }
@@ -108,6 +108,12 @@
         const itemsPerPage = 5;
         let currentPage = 1;
         let newsItems = [];
+
+        function decodeHTMLEntities(text) {
+            const textarea = document.createElement("textarea");
+            textarea.innerHTML = text;
+            return textarea.value;
+        }
 
         async function fetchRSS() {
             try {
@@ -154,8 +160,8 @@
                         summary = entry.getElementsByTagName("content")[0]?.textContent || "Sin descripción.";
                     }
 
-                    // Limpiar HTML de la descripción si es necesario
-                    summary = summary.replace(/<\/?[^>]+(>|$)/g, ""); // Remueve etiquetas HTML
+                    // Limpiar HTML de la descripción y decodificar entidades
+                    summary = decodeHTMLEntities(summary.replace(/<\/?[^>]+(>|$)/g, ""));
                     console.log("📖 Summary:", summary);
 
                     return { title, link, summary };
