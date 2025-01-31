@@ -86,7 +86,7 @@
         }
 
         #pageNum {
-            font-family: 'Anton', sans-serif';
+            font-family: 'Anton', sans-serif;
             font-size: 1.2rem;
             margin: 0 10px;
         }
@@ -110,52 +110,100 @@
         let newsItems = [];
 
         async function fetchRSS() {
-    try {
-        console.log("Fetching RSS...");
-        const response = await fetch(`${corsProxy}${encodeURIComponent(rssFeedUrl)}`);
-        console.log("Response received:", response);
-        
-        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-        
-        const data = await response.json();
-        console.log("Data received:", data);
+            try {
+                console.log("📡 Fetching RSS...");
+                const response = await fetch(`${corsProxy}${encodeURIComponent(rssFeedUrl)}`);
+                console.log("✅ Response received:", response);
+                
+                if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+                
+                const data = await response.json();
+                console.log("🔍 Data received:", data);
 
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(data.contents, "application/xml");
-        console.log("Parsed XML:", xml);
+                const parser = new DOMParser();
+                const xml = parser.parseFromString(data.contents, "application/xml");
+                console.log("📜 Parsed XML:", xml);
 
-        const entries = xml.getElementsByTagName("entry");
-        console.log("Entries found:", entries);
+                const entries = xml.getElementsByTagName("entry");
+                console.log("📰 Entries found:", entries.length);
 
-        if (!entries || entries.length === 0) {
-            document.getElementById("rss-feed").innerHTML = "<p>No hay noticias disponibles.</p>";
-            return;
+                if (!entries || entries.length === 0) {
+                    console.warn("⚠️ No news found in the feed.");
+                    document.getElementById("rss-feed").innerHTML = "<p>No hay noticias disponibles.</p>";
+                    return;
+                }
+
+                // Procesar todas las entradas del feed
+                newsItems = Array.from(entries).map(entry => {
+                    const title = entry.getElementsByTagName("title")[0]?.textContent || "Sin título";
+                    console.log("📝 Title:", title);
+
+                    const linkElement = Array.from(entry.getElementsByTagName("link")).find(
+                        el => el.getAttribute("rel") === "alternate"
+                    );
+                    const link = linkElement ? linkElement.getAttribute("href") : "#";
+                    console.log("🔗 Link:", link);
+
+                    const summary = entry.getElementsByTagName("summary")[0]?.textContent || "Sin descripción.";
+                    console.log("📖 Summary:", summary);
+
+                    return { title, link, summary };
+                });
+
+                console.log("✅ News items processed:", newsItems);
+                renderPage();
+            } catch (error) {
+                console.error("❌ Error al cargar el feed:", error);
+                document.getElementById("rss-feed").innerHTML = `<p>Error al cargar las noticias: ${error.message}</p>`;
+            }
         }
 
-        // Procesar todas las entradas del feed
-        newsItems = Array.from(entries).map(entry => {
-            const title = entry.getElementsByTagName("title")[0]?.textContent || "Sin título";
-            console.log("Title:", title);
+        function renderPage() {
+            const feedContainer = document.getElementById("rss-feed");
+            feedContainer.innerHTML = "";
 
-            const linkElement = Array.from(entry.getElementsByTagName("link")).find(
-                el => el.getAttribute("rel") === "alternate"
-            );
-            const link = linkElement ? linkElement.getAttribute("href") : "#";
-            console.log("Link:", link);
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageItems = newsItems.slice(startIndex, endIndex);
 
-            const summary = entry.getElementsByTagName("summary")[0]?.textContent || "Sin descripción.";
-            console.log("Summary:", summary);
+            pageItems.forEach(item => {
+                const listItem = document.createElement("li");
+                const shortDescription = item.summary.length > 150 
+                    ? item.summary.substring(0, 150) + "..." 
+                    : item.summary;
 
-            return { title, link, summary };
-        });
+                listItem.innerHTML = `
+                    <h4><a href="${item.link}" target="_blank">${item.title}</a></h4>
+                    <p>${shortDescription} 
+                        <a href="${item.link}" target="_blank">
+                            <button>Ver más</button>
+                        </a>
+                    </p>
+                `;
 
-        renderPage();
-    } catch (error) {
-        console.error("Error al cargar el feed:", error);
-        document.getElementById("rss-feed").innerHTML = `<p>Error al cargar las noticias: ${error.message}</p>`;
-    }
-}
+                feedContainer.appendChild(listItem);
+            });
 
+            document.getElementById("prevBtn").disabled = currentPage === 1;
+            document.getElementById("nextBtn").disabled = endIndex >= newsItems.length;
+            document.getElementById("pageNum").textContent = currentPage;
+        }
+
+        function nextPage() {
+            if ((currentPage * itemsPerPage) < newsItems.length) {
+                currentPage++;
+                renderPage();
+            }
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderPage();
+            }
+        }
+
+        fetchRSS();
     </script>
 </body>
 </html>
