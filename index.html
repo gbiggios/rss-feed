@@ -148,7 +148,14 @@
                     const link = linkElement ? linkElement.getAttribute("href") : "#";
                     console.log("🔗 Link:", link);
 
-                    const summary = entry.getElementsByTagName("summary")[0]?.textContent || "Sin descripción.";
+                    // Buscar la descripción en <summary> o <content>
+                    let summary = entry.getElementsByTagName("summary")[0]?.textContent || "";
+                    if (!summary) {
+                        summary = entry.getElementsByTagName("content")[0]?.textContent || "Sin descripción.";
+                    }
+
+                    // Limpiar HTML de la descripción si es necesario
+                    summary = summary.replace(/<\/?[^>]+(>|$)/g, ""); // Remueve etiquetas HTML
                     console.log("📖 Summary:", summary);
 
                     return { title, link, summary };
