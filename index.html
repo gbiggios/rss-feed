@@ -77,11 +77,10 @@
     <a href="https://noticiasorquestalimapu.blogspot.com/" target="_blank" id="viewAllBtn">Ver todas las noticias</a>
 
     <script>
-        const rssFeedUrl = "https://noticiasorquestalimapu.blogspot.com/feeds/posts/default?max-results=5";
-        const corsProxy = "https://api.allorigins.win/get?url="; // Proxy gratuito para evitar problemas de CORS
-        let newsItems = [];
+        const rssFeedUrl = "https://noticiasorquestalimapu.blogspot.com/feeds/posts/default?max-results=10";
+        const corsProxy = "https://api.allorigins.win/get?url=";
+        const maxNewsItems = 5; // Mostrar máximo 5 noticias
 
-        // Decodificación avanzada de entidades HTML
         function decodeHTMLEntitiesAdvanced(text) {
             const parser = new DOMParser();
             const dom = parser.parseFromString(`<!doctype html><body>${text}`, 'text/html');
@@ -99,58 +98,45 @@
                 const data = await response.json();
                 console.log("🔍 Data received:", data);
 
-                // Decodificar Base64
                 const decodedXML = atob(data.contents.split(",")[1]);
-                console.log("📜 Decoded XML:", decodedXML);
-
                 const parser = new DOMParser();
                 const xml = parser.parseFromString(decodedXML, "application/xml");
-                console.log("📜 Parsed XML:", xml);
 
                 const entries = xml.getElementsByTagName("entry");
-                console.log("📰 Entries found:", entries.length);
-
                 if (!entries || entries.length === 0) {
-                    console.warn("⚠️ No news found in the feed.");
                     document.getElementById("rss-feed").innerHTML = "<p>No hay noticias disponibles.</p>";
                     return;
                 }
 
-                // Procesar todas las entradas del feed
-                newsItems = Array.from(entries).map(entry => {
+                // Procesar solo las primeras 5 noticias
+                const newsItems = Array.from(entries).slice(0, maxNewsItems).map(entry => {
                     const title = decodeHTMLEntitiesAdvanced(
                         entry.getElementsByTagName("title")[0]?.textContent || "Sin título"
                     );
-                    console.log("📝 Title:", title);
 
                     const linkElement = Array.from(entry.getElementsByTagName("link")).find(
                         el => el.getAttribute("rel") === "alternate"
                     );
                     const link = linkElement ? linkElement.getAttribute("href") : "#";
-                    console.log("🔗 Link:", link);
 
-                    // Buscar la descripción en <summary> o <content>
                     let summary = entry.getElementsByTagName("summary")[0]?.textContent || "";
                     if (!summary) {
                         summary = entry.getElementsByTagName("content")[0]?.textContent || "Sin descripción.";
                     }
 
-                    // Limpiar HTML de la descripción y decodificar entidades
                     summary = decodeHTMLEntitiesAdvanced(summary.replace(/<\/?[^>]+(>|$)/g, ""));
-                    console.log("📖 Summary:", summary);
 
                     return { title, link, summary };
                 });
 
-                console.log("✅ News items processed:", newsItems);
-                renderNews();
+                renderNews(newsItems);
             } catch (error) {
                 console.error("❌ Error al cargar el feed:", error);
                 document.getElementById("rss-feed").innerHTML = `<p>Error al cargar las noticias: ${error.message}</p>`;
             }
         }
 
-        function renderNews() {
+        function renderNews(newsItems) {
             const feedContainer = document.getElementById("rss-feed");
             feedContainer.innerHTML = "";
 
