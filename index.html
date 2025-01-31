@@ -104,34 +104,27 @@
     </div>
 
     <script>
-        const rssFeedUrl = "https://noticiasorquestalimapu.blogspot.com/feeds/posts/default";
-        const corsProxy = "https://api.allorigins.win/get?url=";
+        const apiUrl = "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnoticiasorquestalimapu.blogspot.com%2Ffeeds%2Fposts%2Fdefault";
         const itemsPerPage = 5;
         let currentPage = 1;
         let newsItems = [];
 
         async function fetchRSS() {
             try {
-                const response = await fetch(`${corsProxy}${encodeURIComponent(rssFeedUrl)}`);
+                const response = await fetch(apiUrl);
                 if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
                 const data = await response.json();
-                const parser = new DOMParser();
-                const xml = parser.parseFromString(data.contents, "application/xml");
-                const entries = xml.getElementsByTagName("entry");
 
-                if (entries.length === 0) {
+                if (data.status !== "ok") {
                     document.getElementById("rss-feed").innerHTML = "<p>No hay noticias disponibles.</p>";
                     return;
                 }
 
-                newsItems = Array.from(entries).map(entry => {
-                    const title = entry.getElementsByTagName("title")[0].textContent;
-                    const link = Array.from(entry.getElementsByTagName("link")).find(
-                        el => el.getAttribute("rel") === "alternate"
-                    ).getAttribute("href");
-                    const summary = entry.getElementsByTagName("summary")[0]?.textContent || "Sin descripción.";
-                    return { title, link, summary };
-                });
+                newsItems = data.items.map(item => ({
+                    title: item.title,
+                    link: item.link,
+                    summary: item.description.replace(/(<([^>]+)>)/gi, "") // Quitar etiquetas HTML
+                }));
 
                 renderPage();
             } catch (error) {
