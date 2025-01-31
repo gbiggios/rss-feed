@@ -120,8 +120,12 @@
                 const data = await response.json();
                 console.log("🔍 Data received:", data);
 
+                // Decodificar Base64
+                const decodedXML = atob(data.contents.split(",")[1]);
+                console.log("📜 Decoded XML:", decodedXML);
+
                 const parser = new DOMParser();
-                const xml = parser.parseFromString(data.contents, "application/xml");
+                const xml = parser.parseFromString(decodedXML, "application/xml");
                 console.log("📜 Parsed XML:", xml);
 
                 const entries = xml.getElementsByTagName("entry");
