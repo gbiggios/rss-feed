@@ -19,6 +19,19 @@
             margin-bottom: 20px;
             border-bottom: 1px solid #ddd;
             padding-bottom: 10px;
+            text-align: left;
+        }
+        button {
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+        .pagination {
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -26,25 +39,87 @@
     <h2>Últimas Noticias</h2>
     <ul id="rss-feed"></ul>
 
+    <div class="pagination">
+        <button id="prevBtn" onclick="prevPage()" disabled>⏪ Anterior</button>
+        <span id="pageNum">1</span>
+        <button id="nextBtn" onclick="nextPage()">Siguiente ⏩</button>
+    </div>
+
     <script>
+        const rssFeedUrl = "https://api.rss2json.com/v1/api.json?rss_url=https://noticiasorquestalimapu.blogspot.com/feeds/posts/default";
+        const itemsPerPage = 5; // Cantidad de noticias por página
+        let currentPage = 1;
+        let newsItems = [];
+
         async function fetchRSS() {
-            const rssFeedUrl = "https://api.rss2json.com/v1/api.json?rss_url=https://noticiasorquestalimapu.blogspot.com/feeds/posts/default";
             try {
                 const response = await fetch(rssFeedUrl);
                 const data = await response.json();
-                const feedContainer = document.getElementById("rss-feed");
 
                 if (data.status === "ok") {
-                    data.items.forEach(item => {
-                        const listItem = document.createElement("li");
-                        listItem.innerHTML = `<h4><a href="${item.link}" target="_blank">${item.title}</a></h4><p>${item.description}</p>`;
-                        feedContainer.appendChild(listItem);
-                    });
+                    newsItems = data.items;
+                    renderPage();
                 }
             } catch (error) {
                 console.error("Error al cargar el feed:", error);
             }
         }
+
+        function renderPage() {
+            const feedContainer = document.getElementById("rss-feed");
+            feedContainer.innerHTML = ""; // Limpiar contenido anterior
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageItems = newsItems.slice(startIndex, endIndex);
+
+            pageItems.forEach(item => {
+                const listItem = document.createElement("li");
+
+                const shortDescription = item.description.length > 150 
+                    ? item.description.substring(0, 150) + "..." 
+                    : item.description;
+
+                listItem.innerHTML = `
+                    <h4><a href="${item.link}" target="_blank">${item.title}</a></h4>
+                    <p class="short-text">${shortDescription} 
+                        <button onclick="toggleReadMore(this, '${item.description.replace(/'/g, "\\'")}')">Ver más</button>
+                    </p>
+                `;
+
+                feedContainer.appendChild(listItem);
+            });
+
+            // Control de botones de paginación
+            document.getElementById("prevBtn").disabled = currentPage === 1;
+            document.getElementById("nextBtn").disabled = endIndex >= newsItems.length;
+            document.getElementById("pageNum").textContent = currentPage;
+        }
+
+        function toggleReadMore(button, fullText) {
+            const parent = button.parentElement;
+            if (button.textContent === "Ver más") {
+                parent.innerHTML = `<p>${fullText} <button onclick="toggleReadMore(this, '${fullText.replace(/'/g, "\\'")}')">Ver menos</button></p>`;
+            } else {
+                parent.innerHTML = `<p class="short-text">${fullText.substring(0, 150)}... 
+                    <button onclick="toggleReadMore(this, '${fullText.replace(/'/g, "\\'")}')">Ver más</button></p>`;
+            }
+        }
+
+        function nextPage() {
+            if ((currentPage * itemsPerPage) < newsItems.length) {
+                currentPage++;
+                renderPage();
+            }
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderPage();
+            }
+        }
+
         fetchRSS();
     </script>
 </body>
