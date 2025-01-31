@@ -7,7 +7,6 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Lora:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <style>
-        /* Estilo general */
         body {
             font-family: 'Lora', serif;
             background-color: #fef2cc;
@@ -106,14 +105,14 @@
 
     <script>
         const rssFeedUrl = "https://noticiasorquestalimapu.blogspot.com/feeds/posts/default";
-        const corsProxy = "https://corsproxy.io/?"; // Proxy alternativo
+        const corsProxy = "https://thingproxy.freeboard.io/fetch/"; // Proxy confiable
         const itemsPerPage = 5;
         let currentPage = 1;
         let newsItems = [];
 
         async function fetchRSS() {
             try {
-                const response = await fetch(`${corsProxy}${encodeURIComponent(rssFeedUrl)}`);
+                const response = await fetch(`${corsProxy}${rssFeedUrl}`);
                 if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
                 const data = await response.text();
                 const parser = new DOMParser();
