@@ -109,10 +109,11 @@
         let currentPage = 1;
         let newsItems = [];
 
-        function decodeHTMLEntities(text) {
+        // Decodificación avanzada de entidades HTML
+        function decodeHTMLEntitiesAdvanced(text) {
             const parser = new DOMParser();
             const dom = parser.parseFromString(`<!doctype html><body>${text}`, 'text/html');
-            return dom.body.textContent;
+            return dom.body.textContent || "";
         }
 
         async function fetchRSS() {
@@ -145,7 +146,9 @@
 
                 // Procesar todas las entradas del feed
                 newsItems = Array.from(entries).map(entry => {
-                    const title = entry.getElementsByTagName("title")[0]?.textContent || "Sin título";
+                    const title = decodeHTMLEntitiesAdvanced(
+                        entry.getElementsByTagName("title")[0]?.textContent || "Sin título"
+                    );
                     console.log("📝 Title:", title);
 
                     const linkElement = Array.from(entry.getElementsByTagName("link")).find(
@@ -161,7 +164,7 @@
                     }
 
                     // Limpiar HTML de la descripción y decodificar entidades
-                    summary = decodeHTMLEntities(summary.replace(/<\/?[^>]+(>|$)/g, ""));
+                    summary = decodeHTMLEntitiesAdvanced(summary.replace(/<\/?[^>]+(>|$)/g, ""));
                     console.log("📖 Summary:", summary);
 
                     return { title, link, summary };
