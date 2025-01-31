@@ -81,7 +81,6 @@
         const corsProxy = "https://api.allorigins.win/get?url="; // Proxy gratuito para evitar problemas de CORS
         const maxNewsItems = 5;
 
-        // Función avanzada para decodificar caracteres especiales y limpiar texto
         function decodeHTMLEntitiesAdvanced(text) {
             const parser = new DOMParser();
             const dom = parser.parseFromString(`<!doctype html><body>${text}`, 'text/html');
@@ -92,17 +91,15 @@
             try {
                 console.log("📡 Fetching RSS...");
                 const response = await fetch(`${corsProxy}${encodeURIComponent(rssFeedUrl)}`);
-                console.log("✅ Response received:", response);
                 
                 if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
                 
                 const data = await response.json();
-                console.log("🔍 Data received:", data);
-
-                // Decodificar Base64
-                const decodedXML = atob(data.contents.split(",")[1]);
+                const utf8Decoder = new TextDecoder("utf-8");
+                const decodedText = utf8Decoder.decode(new Uint8Array([...data.contents].map(c => c.charCodeAt(0))));
+                
                 const parser = new DOMParser();
-                const xml = parser.parseFromString(decodedXML, "application/xml");
+                const xml = parser.parseFromString(decodedText, "application/xml");
 
                 const entries = xml.getElementsByTagName("entry");
                 if (!entries || entries.length === 0) {
@@ -110,12 +107,8 @@
                     return;
                 }
 
-                // Procesar solo las primeras 5 noticias
                 const newsItems = Array.from(entries).slice(0, maxNewsItems).map(entry => {
-                    const title = decodeHTMLEntitiesAdvanced(
-                        entry.getElementsByTagName("title")[0]?.textContent || "Sin título"
-                    );
-
+                    const title = decodeHTMLEntitiesAdvanced(entry.getElementsByTagName("title")[0]?.textContent || "Sin título");
                     const linkElement = Array.from(entry.getElementsByTagName("link")).find(
                         el => el.getAttribute("rel") === "alternate"
                     );
