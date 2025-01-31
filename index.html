@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Noticias Orquesta Limapu</title>
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Lora:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -104,7 +103,7 @@
     </div>
 
     <script>
-        const apiUrl = "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnoticiasorquestalimapu.blogspot.com%2Ffeeds%2Fposts%2Fdefault";
+        const apiUrl = "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnoticiasorquestalimapu.blogspot.com%2Ffeeds%2Fposts%2Fdefault%3Fmax-results%3D10";
         const itemsPerPage = 5;
         let currentPage = 1;
         let newsItems = [];
@@ -115,11 +114,12 @@
                 if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
                 const data = await response.json();
 
-                if (data.status !== "ok") {
+                if (data.status !== "ok" || data.items.length === 0) {
                     document.getElementById("rss-feed").innerHTML = "<p>No hay noticias disponibles.</p>";
                     return;
                 }
 
+                // Procesar todas las entradas del feed
                 newsItems = data.items.map(item => ({
                     title: item.title,
                     link: item.link,
