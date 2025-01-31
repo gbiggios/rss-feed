@@ -11,15 +11,41 @@
             margin: auto;
             text-align: center;
         }
-        iframe {
-            width: 100%;
-            height: 500px;
-            border: none;
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
         }
     </style>
 </head>
 <body>
     <h2>Últimas Noticias</h2>
-    <iframe src="https://script.google.com/macros/s/AKfycbzpztO1abSwy6AXhl2X_j_gDzKuavUZcr6x3Xp6GOsngs43AbOnlt5jkJpnWT6MJMX3/exec"></iframe>
+    <ul id="rss-feed"></ul>
+
+    <script>
+        async function fetchRSS() {
+            const rssFeedUrl = "https://api.rss2json.com/v1/api.json?rss_url=https://noticiasorquestalimapu.blogspot.com/feeds/posts/default";
+            try {
+                const response = await fetch(rssFeedUrl);
+                const data = await response.json();
+                const feedContainer = document.getElementById("rss-feed");
+
+                if (data.status === "ok") {
+                    data.items.forEach(item => {
+                        const listItem = document.createElement("li");
+                        listItem.innerHTML = `<h4><a href="${item.link}" target="_blank">${item.title}</a></h4><p>${item.description}</p>`;
+                        feedContainer.appendChild(listItem);
+                    });
+                }
+            } catch (error) {
+                console.error("Error al cargar el feed:", error);
+            }
+        }
+        fetchRSS();
+    </script>
 </body>
 </html>
