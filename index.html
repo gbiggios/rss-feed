@@ -8,7 +8,7 @@
     <style>
         body {
             font-family: 'Lora', serif;
-            background-color: #FFD936; /* Color proporcionado */
+            background-color: #FFD600; /* Fondo amarillo */
             color: #333;
             max-width: 800px;
             margin: auto;
@@ -86,7 +86,7 @@
         }
 
         #pageNum {
-            font-family: 'Anton', sans-serif;
+            font-family: 'Anton', sans-serif';
             font-size: 1.2rem;
             margin: 0 10px;
         }
@@ -104,17 +104,18 @@
 
     <script>
         const rssFeedUrl = "https://noticiasorquestalimapu.blogspot.com/feeds/posts/default?max-results=10";
+        const corsProxy = "https://api.allorigins.win/get?url="; // Proxy para evitar CORS
         const itemsPerPage = 5;
         let currentPage = 1;
         let newsItems = [];
 
         async function fetchRSS() {
             try {
-                const response = await fetch(rssFeedUrl);
+                const response = await fetch(`${corsProxy}${encodeURIComponent(rssFeedUrl)}`);
                 if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-                const data = await response.text();
+                const data = await response.json();
                 const parser = new DOMParser();
-                const xml = parser.parseFromString(data, "application/xml");
+                const xml = parser.parseFromString(data.contents, "application/xml");
                 const entries = xml.getElementsByTagName("entry");
 
                 if (entries.length === 0) {
