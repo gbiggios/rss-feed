@@ -86,78 +86,71 @@
             return dom.body.textContent || "";
         }
 
-        async function fetchRSS() {
-            try {
-                console.log("📡 Fetching RSS...");
-                const response = await fetch(`${corsProxy}${encodeURIComponent(rssFeedUrl)}`);
-                
-                if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-                
-                const data = await response.json();
-                console.log("🔍 Data received:", data);
+async function fetchRSS() {
+    try {
+        console.log("📡 Fetching RSS...");
+        const response = await fetch(`${corsProxy}${encodeURIComponent(rssFeedUrl)}`);
+        
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+        
+        const data = await response.json();
+        console.log("🔍 Data received:", data);
 
-                if (!data.contents) {
-                    throw new Error("El contenido de la respuesta está vacío o malformado");
-                }
-                
-                const parser = new DOMParser();
-                const xml = parser.parseFromString(data.contents, "application/xml");
+        if (!data.contents) {
+            throw new Error("El contenido de la respuesta está vacío o malformado");
+        }
 
-                if (xml.querySelector("parsererror")) {
-                    console.error("Error al parsear el XML", xml.querySelector("parsererror").textContent);
-                    throw new Error("No se pudo analizar el XML");
-                }
+        // Extraer la parte Base64 del contenido
+        const base64Data = data.contents.split("base64,")[1];
+        if (!base64Data) throw new Error("No se encontró contenido en Base64");
 
-                console.log("📜 XML Parsed:", xml);
-                
-                const entries = xml.getElementsByTagName("entry");
-                if (!entries || entries.length === 0) {
-                    document.getElementById("rss-feed").innerHTML = "<p>No hay noticias disponibles.</p>";
-                    return;
-                }
+        // Decodificar Base64 a texto UTF-8
+        const decodedXML = atob(base64Data);
+        console.log("📜 Decoded XML:", decodedXML);
 
-                const newsItems = Array.from(entries).slice(0, maxNewsItems).map(entry => {
-                    const title = decodeHTMLEntitiesAdvanced(entry.getElementsByTagName("title")[0]?.textContent || "Sin título");
-                    const linkElement = Array.from(entry.getElementsByTagName("link")).find(
-                        el => el.getAttribute("rel") === "alternate"
-                    );
-                    const link = linkElement ? linkElement.getAttribute("href") : "#";
+        // Convertir el XML a un objeto DOM
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(decodedXML, "application/xml");
 
-                    let summary = entry.getElementsByTagName("summary")[0]?.textContent || "";
-                    if (!summary) {
-                        summary = entry.getElementsByTagName("content")[0]?.textContent || "Sin descripción.";
-                    }
+        // Verificar si hubo error de parsing
+        if (xml.querySelector("parsererror")) {
+            console.error("❌ Error al parsear XML:", xml.querySelector("parsererror").textContent);
+            throw new Error("No se pudo analizar el XML");
+        }
 
-                    summary = decodeHTMLEntitiesAdvanced(summary.replace(/<\/?[^>]+(>|$)/g, ""));
-                    return { title, link, summary };
-                });
+        console.log("📜 XML Parsed Successfully:", xml);
 
-                console.log("📰 News items parsed:", newsItems);
-                renderNews(newsItems);
-            } catch (error) {
-                console.error("❌ Error al cargar el feed:", error);
-                document.getElementById("rss-feed").innerHTML = `<p>Error al cargar las noticias: ${error.message}</p>`;
+        const entries = xml.getElementsByTagName("entry");
+        if (!entries || entries.length === 0) {
+            document.getElementById("rss-feed").innerHTML = "<p>No hay noticias disponibles.</p>";
+            return;
+        }
+
+        const newsItems = Array.from(entries).slice(0, maxNewsItems).map(entry => {
+            const title = decodeHTMLEntitiesAdvanced(entry.getElementsByTagName("title")[0]?.textContent || "Sin título");
+            const linkElement = Array.from(entry.getElementsByTagName("link")).find(
+                el => el.getAttribute("rel") === "alternate"
+            );
+            const link = linkElement ? linkElement.getAttribute("href") : "#";
+
+            let summary = entry.getElementsByTagName("summary")[0]?.textContent || "";
+            if (!summary) {
+                summary = entry.getElementsByTagName("content")[0]?.textContent || "Sin descripción.";
             }
-        }
 
-        function renderNews(newsItems) {
-            const feedContainer = document.getElementById("rss-feed");
-            feedContainer.innerHTML = "";
+            summary = decodeHTMLEntitiesAdvanced(summary.replace(/<\\/?[^>]+(>|$)/g, ""));
 
-            newsItems.forEach(item => {
-                const listItem = document.createElement("li");
-                const shortDescription = item.summary.length > 150 
-                    ? item.summary.substring(0, 150) + "..." 
-                    : item.summary;
+            return { title, link, summary };
+        });
 
-                listItem.innerHTML = `
-                    <h4><a href="${item.link}" target="_blank">${item.title}</a></h4>
-                    <p>${shortDescription}</p>
-                `;
+        console.log("📰 News items parsed:", newsItems);
+        renderNews(newsItems);
+    } catch (error) {
+        console.error("❌ Error al cargar el feed:", error);
+        document.getElementById("rss-feed").innerHTML = `<p>Error al cargar las noticias: ${error.message}</p>`;
+    }
+}
 
-                feedContainer.appendChild(listItem);
-            });
-        }
 
         fetchRSS();
     </script>
