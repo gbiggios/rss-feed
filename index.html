@@ -50,45 +50,22 @@
             color: #333;
         }
 
-        button {
-            font-family: 'Anton', sans-serif;
-            cursor: pointer;
-            background-color: #004a91;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            margin-top: 10px;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-
-        button:hover {
-            background-color: #003366;
-        }
-
-        .pagination {
-            margin-top: 20px;
-        }
-
-        #prevBtn, #nextBtn {
+        #viewAllBtn {
             font-family: 'Anton', sans-serif;
             background-color: #004a91;
             color: white;
             border: none;
             padding: 10px 20px;
             border-radius: 5px;
-            font-size: 14px;
+            font-size: 16px;
             cursor: pointer;
+            margin-top: 20px;
+            text-decoration: none;
+            display: inline-block;
         }
 
-        #prevBtn:hover, #nextBtn:hover {
+        #viewAllBtn:hover {
             background-color: #003366;
-        }
-
-        #pageNum {
-            font-family: 'Anton', sans-serif';
-            font-size: 1.2rem;
-            margin: 0 10px;
         }
     </style>
 </head>
@@ -96,17 +73,12 @@
     <h2>Últimas Noticias</h2>
     <ul id="rss-feed"></ul>
 
-    <div class="pagination">
-        <button id="prevBtn" onclick="prevPage()" disabled>⏪ Anterior</button>
-        <span id="pageNum">1</span>
-        <button id="nextBtn" onclick="nextPage()">Siguiente ⏩</button>
-    </div>
+    <!-- Botón para ir al blog completo -->
+    <a href="https://noticiasorquestalimapu.blogspot.com/" target="_blank" id="viewAllBtn">Ver todas las noticias</a>
 
     <script>
-        const rssFeedUrl = "https://noticiasorquestalimapu.blogspot.com/feeds/posts/default?max-results=10";
+        const rssFeedUrl = "https://noticiasorquestalimapu.blogspot.com/feeds/posts/default?max-results=5";
         const corsProxy = "https://api.allorigins.win/get?url="; // Proxy gratuito para evitar problemas de CORS
-        const itemsPerPage = 5;
-        let currentPage = 1;
         let newsItems = [];
 
         // Decodificación avanzada de entidades HTML
@@ -171,22 +143,18 @@
                 });
 
                 console.log("✅ News items processed:", newsItems);
-                renderPage();
+                renderNews();
             } catch (error) {
                 console.error("❌ Error al cargar el feed:", error);
                 document.getElementById("rss-feed").innerHTML = `<p>Error al cargar las noticias: ${error.message}</p>`;
             }
         }
 
-        function renderPage() {
+        function renderNews() {
             const feedContainer = document.getElementById("rss-feed");
             feedContainer.innerHTML = "";
 
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            const pageItems = newsItems.slice(startIndex, endIndex);
-
-            pageItems.forEach(item => {
+            newsItems.forEach(item => {
                 const listItem = document.createElement("li");
                 const shortDescription = item.summary.length > 150 
                     ? item.summary.substring(0, 150) + "..." 
@@ -194,33 +162,11 @@
 
                 listItem.innerHTML = `
                     <h4><a href="${item.link}" target="_blank">${item.title}</a></h4>
-                    <p>${shortDescription} 
-                        <a href="${item.link}" target="_blank">
-                            <button>Ver más</button>
-                        </a>
-                    </p>
+                    <p>${shortDescription}</p>
                 `;
 
                 feedContainer.appendChild(listItem);
             });
-
-            document.getElementById("prevBtn").disabled = currentPage === 1;
-            document.getElementById("nextBtn").disabled = endIndex >= newsItems.length;
-            document.getElementById("pageNum").textContent = currentPage;
-        }
-
-        function nextPage() {
-            if ((currentPage * itemsPerPage) < newsItems.length) {
-                currentPage++;
-                renderPage();
-            }
-        }
-
-        function prevPage() {
-            if (currentPage > 1) {
-                currentPage--;
-                renderPage();
-            }
         }
 
         fetchRSS();
