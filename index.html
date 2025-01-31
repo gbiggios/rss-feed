@@ -10,8 +10,8 @@
         /* Estilo general */
         body {
             font-family: 'Lora', serif;
-            background-color: #fef2cc; /* Fondo amarillo claro */
-            color: #333; /* Texto en color oscuro */
+            background-color: #fef2cc;
+            color: #333;
             max-width: 800px;
             margin: auto;
             padding: 20px;
@@ -21,7 +21,7 @@
         h2 {
             font-family: 'Anton', sans-serif;
             font-size: 2.5rem;
-            color: #004a91; /* Azul oscuro */
+            color: #004a91;
             margin-bottom: 30px;
         }
 
@@ -31,7 +31,7 @@
         }
 
         li {
-            background-color: #cce7ff; /* Fondo azul claro */
+            background-color: #cce7ff;
             margin-bottom: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -42,20 +42,20 @@
         li h4 {
             font-family: 'Anton', sans-serif;
             font-size: 1.5rem;
-            color: #004a91; /* Azul oscuro */
+            color: #004a91;
             margin: 0 0 10px;
         }
 
         li p {
             font-family: 'Lora', serif;
             font-size: 1rem;
-            color: #333; /* Texto en color oscuro */
+            color: #333;
         }
 
         button {
             font-family: 'Anton', sans-serif;
             cursor: pointer;
-            background-color: #004a91; /* Azul oscuro */
+            background-color: #004a91;
             color: white;
             border: none;
             padding: 8px 15px;
@@ -65,7 +65,7 @@
         }
 
         button:hover {
-            background-color: #003366; /* Azul más oscuro */
+            background-color: #003366;
         }
 
         .pagination {
@@ -74,7 +74,7 @@
 
         #prevBtn, #nextBtn {
             font-family: 'Anton', sans-serif;
-            background-color: #004a91; /* Azul oscuro */
+            background-color: #004a91;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -84,7 +84,7 @@
         }
 
         #prevBtn:hover, #nextBtn:hover {
-            background-color: #003366; /* Azul más oscuro */
+            background-color: #003366;
         }
 
         #pageNum {
@@ -106,19 +106,24 @@
 
     <script>
         const rssFeedUrl = "https://noticiasorquestalimapu.blogspot.com/feeds/posts/default";
-        const corsProxy = "https://api.allorigins.win/get?url="; // Proxy para evitar CORS
-        const itemsPerPage = 5; // Cantidad de noticias por página
+        const corsProxy = "https://corsproxy.io/?"; // Proxy alternativo
+        const itemsPerPage = 5;
         let currentPage = 1;
         let newsItems = [];
 
         async function fetchRSS() {
             try {
-                // Obtener el feed RSS a través del proxy
                 const response = await fetch(`${corsProxy}${encodeURIComponent(rssFeedUrl)}`);
-                const data = await response.json();
+                if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+                const data = await response.text();
                 const parser = new DOMParser();
-                const xml = parser.parseFromString(data.contents, "application/xml");
+                const xml = parser.parseFromString(data, "application/xml");
                 const entries = xml.getElementsByTagName("entry");
+
+                if (entries.length === 0) {
+                    document.getElementById("rss-feed").innerHTML = "<p>No hay noticias disponibles.</p>";
+                    return;
+                }
 
                 newsItems = Array.from(entries).map(entry => {
                     const title = entry.getElementsByTagName("title")[0].textContent;
@@ -132,12 +137,13 @@
                 renderPage();
             } catch (error) {
                 console.error("Error al cargar el feed:", error);
+                document.getElementById("rss-feed").innerHTML = `<p>Error al cargar las noticias: ${error.message}</p>`;
             }
         }
 
         function renderPage() {
             const feedContainer = document.getElementById("rss-feed");
-            feedContainer.innerHTML = ""; // Limpiar contenido anterior
+            feedContainer.innerHTML = "";
 
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = startIndex + itemsPerPage;
@@ -145,9 +151,7 @@
 
             pageItems.forEach(item => {
                 const listItem = document.createElement("li");
-
-                // Mostrar solo un resumen de la noticia (primeros 150 caracteres)
-                const shortDescription = item.description.length > 500 
+                const shortDescription = item.description.length > 150 
                     ? item.description.substring(0, 150) + "..." 
                     : item.description;
 
@@ -163,7 +167,6 @@
                 feedContainer.appendChild(listItem);
             });
 
-            // Control de botones de paginación
             document.getElementById("prevBtn").disabled = currentPage === 1;
             document.getElementById("nextBtn").disabled = endIndex >= newsItems.length;
             document.getElementById("pageNum").textContent = currentPage;
