@@ -105,18 +105,18 @@
 
     <script>
         const rssFeedUrl = "https://noticiasorquestalimapu.blogspot.com/feeds/posts/default";
-        const corsProxy = "https://thingproxy.freeboard.io/fetch/"; // Proxy confiable
+        const corsProxy = "https://api.allorigins.win/get?url=";
         const itemsPerPage = 5;
         let currentPage = 1;
         let newsItems = [];
 
         async function fetchRSS() {
             try {
-                const response = await fetch(`${corsProxy}${rssFeedUrl}`);
+                const response = await fetch(`${corsProxy}${encodeURIComponent(rssFeedUrl)}`);
                 if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-                const data = await response.text();
+                const data = await response.json();
                 const parser = new DOMParser();
-                const xml = parser.parseFromString(data, "application/xml");
+                const xml = parser.parseFromString(data.contents, "application/xml");
                 const entries = xml.getElementsByTagName("entry");
 
                 if (entries.length === 0) {
@@ -130,7 +130,7 @@
                         el => el.getAttribute("rel") === "alternate"
                     ).getAttribute("href");
                     const summary = entry.getElementsByTagName("summary")[0]?.textContent || "Sin descripción.";
-                    return { title, link, description: summary };
+                    return { title, link, summary };
                 });
 
                 renderPage();
@@ -150,13 +150,13 @@
 
             pageItems.forEach(item => {
                 const listItem = document.createElement("li");
-                const shortDescription = item.description.length > 150 
-                    ? item.description.substring(0, 150) + "..." 
-                    : item.description;
+                const shortDescription = item.summary.length > 150 
+                    ? item.summary.substring(0, 150) + "..." 
+                    : item.summary;
 
                 listItem.innerHTML = `
                     <h4><a href="${item.link}" target="_blank">${item.title}</a></h4>
-                    <p class="short-text">${shortDescription} 
+                    <p>${shortDescription} 
                         <a href="${item.link}" target="_blank">
                             <button>Ver más</button>
                         </a>
