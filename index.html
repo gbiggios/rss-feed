@@ -103,13 +103,19 @@
     </div>
 
     <script>
-        const apiUrl = "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnoticiasorquestalimapu.blogspot.com%2Ffeeds%2Fposts%2Fdefault%3Fmax-results%3D10";
+        function getAPIUrl() {
+            const baseUrl = "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnoticiasorquestalimapu.blogspot.com%2Ffeeds%2Fposts%2Fdefault%3Fmax-results%3D10";
+            const randomValue = Math.random(); // Evita caché
+            return `${baseUrl}&nocache=${randomValue}`;
+        }
+
         const itemsPerPage = 5;
         let currentPage = 1;
         let newsItems = [];
 
         async function fetchRSS() {
             try {
+                const apiUrl = getAPIUrl();
                 const response = await fetch(apiUrl);
                 if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
                 const data = await response.json();
