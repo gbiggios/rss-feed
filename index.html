@@ -77,10 +77,11 @@
     <a href="https://noticiasorquestalimapu.blogspot.com/" target="_blank" id="viewAllBtn">Ver todas las noticias</a>
 
     <script>
-        const rssFeedUrl = "https://noticiasorquestalimapu.blogspot.com/feeds/posts/default?max-results=10";
-        const corsProxy = "https://api.allorigins.win/get?url=";
-        const maxNewsItems = 5; // Mostrar máximo 5 noticias
+        const rssFeedUrl = "https://noticiasorquestalimapu.blogspot.com/feeds/posts/default?max-results=5";
+        const corsProxy = "https://api.allorigins.win/get?url="; // Proxy gratuito para evitar problemas de CORS
+        const maxNewsItems = 5;
 
+        // Función avanzada para decodificar caracteres especiales y limpiar texto
         function decodeHTMLEntitiesAdvanced(text) {
             const parser = new DOMParser();
             const dom = parser.parseFromString(`<!doctype html><body>${text}`, 'text/html');
@@ -98,6 +99,7 @@
                 const data = await response.json();
                 console.log("🔍 Data received:", data);
 
+                // Decodificar Base64
                 const decodedXML = atob(data.contents.split(",")[1]);
                 const parser = new DOMParser();
                 const xml = parser.parseFromString(decodedXML, "application/xml");
