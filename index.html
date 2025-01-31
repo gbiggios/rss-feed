@@ -8,7 +8,7 @@
     <style>
         body {
             font-family: 'Lora', serif;
-            background-color: #FFD600; /* Color de fondo proporcionado */
+            background-color: #FFD936; /* Color proporcionado */
             color: #333;
             max-width: 800px;
             margin: auto;
@@ -86,7 +86,7 @@
         }
 
         #pageNum {
-            font-family: 'Anton', sans-serif';
+            font-family: 'Anton', sans-serif;
             font-size: 1.2rem;
             margin: 0 10px;
         }
@@ -103,34 +103,34 @@
     </div>
 
     <script>
-        function getAPIUrl() {
-            const baseUrl = "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnoticiasorquestalimapu.blogspot.com%2Ffeeds%2Fposts%2Fdefault%3Fmax-results%3D10";
-            const randomValue = Math.random(); // Evita caché
-            return `${baseUrl}&nocache=${randomValue}`;
-        }
-
+        const rssFeedUrl = "https://noticiasorquestalimapu.blogspot.com/feeds/posts/default?max-results=10";
         const itemsPerPage = 5;
         let currentPage = 1;
         let newsItems = [];
 
         async function fetchRSS() {
             try {
-                const apiUrl = getAPIUrl();
-                const response = await fetch(apiUrl);
+                const response = await fetch(rssFeedUrl);
                 if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-                const data = await response.json();
+                const data = await response.text();
+                const parser = new DOMParser();
+                const xml = parser.parseFromString(data, "application/xml");
+                const entries = xml.getElementsByTagName("entry");
 
-                if (data.status !== "ok" || data.items.length === 0) {
+                if (entries.length === 0) {
                     document.getElementById("rss-feed").innerHTML = "<p>No hay noticias disponibles.</p>";
                     return;
                 }
 
                 // Procesar todas las entradas del feed
-                newsItems = data.items.map(item => ({
-                    title: item.title,
-                    link: item.link,
-                    summary: item.description.replace(/(<([^>]+)>)/gi, "") // Quitar etiquetas HTML
-                }));
+                newsItems = Array.from(entries).map(entry => {
+                    const title = entry.getElementsByTagName("title")[0].textContent;
+                    const link = Array.from(entry.getElementsByTagName("link")).find(
+                        el => el.getAttribute("rel") === "alternate"
+                    ).getAttribute("href");
+                    const summary = entry.getElementsByTagName("summary")[0]?.textContent || "Sin descripción.";
+                    return { title, link, summary };
+                });
 
                 renderPage();
             } catch (error) {
