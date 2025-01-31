@@ -4,34 +4,93 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Noticias Orquesta Limapu</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Lora:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <style>
+        /* Estilo general */
         body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
+            font-family: 'Lora', serif;
+            background-color: #fef2cc; /* Fondo amarillo claro */
+            color: #333; /* Texto en color oscuro */
+            max-width: 800px;
             margin: auto;
+            padding: 20px;
             text-align: center;
         }
+
+        h2 {
+            font-family: 'Anton', sans-serif;
+            font-size: 2.5rem;
+            color: #004a91; /* Azul oscuro */
+            margin-bottom: 30px;
+        }
+
         ul {
             list-style-type: none;
             padding: 0;
         }
+
         li {
+            background-color: #cce7ff; /* Fondo azul claro */
             margin-bottom: 20px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
             text-align: left;
         }
+
+        li h4 {
+            font-family: 'Anton', sans-serif;
+            font-size: 1.5rem;
+            color: #004a91; /* Azul oscuro */
+            margin: 0 0 10px;
+        }
+
+        li p {
+            font-family: 'Lora', serif;
+            font-size: 1rem;
+            color: #333; /* Texto en color oscuro */
+        }
+
         button {
+            font-family: 'Anton', sans-serif;
             cursor: pointer;
-            background-color: #007bff;
+            background-color: #004a91; /* Azul oscuro */
             color: white;
             border: none;
-            padding: 5px 10px;
-            margin-top: 5px;
+            padding: 8px 15px;
+            margin-top: 10px;
+            border-radius: 5px;
             font-size: 14px;
         }
+
+        button:hover {
+            background-color: #003366; /* Azul más oscuro */
+        }
+
         .pagination {
             margin-top: 20px;
+        }
+
+        #prevBtn, #nextBtn {
+            font-family: 'Anton', sans-serif;
+            background-color: #004a91; /* Azul oscuro */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        #prevBtn:hover, #nextBtn:hover {
+            background-color: #003366; /* Azul más oscuro */
+        }
+
+        #pageNum {
+            font-family: 'Anton', sans-serif;
+            font-size: 1.2rem;
+            margin: 0 10px;
         }
     </style>
 </head>
@@ -46,14 +105,16 @@
     </div>
 
     <script>
-        const rssFeedUrl = "https://api.rss2json.com/v1/api.json?rss_url=https://noticiasorquestalimapu.blogspot.com/feeds/posts/default";
+        const rssFeedBaseUrl = "https://api.rss2json.com/v1/api.json?rss_url=https://noticiasorquestalimapu.blogspot.com/feeds/posts/default";
         const itemsPerPage = 5; // Cantidad de noticias por página
         let currentPage = 1;
         let newsItems = [];
 
         async function fetchRSS() {
             try {
-                const response = await fetch(rssFeedUrl);
+                // Se agrega un parámetro único para evitar la caché
+                const timestamp = new Date().getTime();
+                const response = await fetch(`${rssFeedBaseUrl}&nocache=${timestamp}`);
                 const data = await response.json();
 
                 if (data.status === "ok") {
