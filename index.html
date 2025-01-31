@@ -76,6 +76,7 @@
             pageItems.forEach(item => {
                 const listItem = document.createElement("li");
 
+                // Mostrar solo un resumen de la noticia (primeros 150 caracteres)
                 const shortDescription = item.description.length > 150 
                     ? item.description.substring(0, 150) + "..." 
                     : item.description;
@@ -83,7 +84,9 @@
                 listItem.innerHTML = `
                     <h4><a href="${item.link}" target="_blank">${item.title}</a></h4>
                     <p class="short-text">${shortDescription} 
-                        <button onclick="toggleReadMore(this, '${item.description.replace(/'/g, "\\'")}')">Ver más</button>
+                        <a href="${item.link}" target="_blank">
+                            <button>Ver más</button>
+                        </a>
                     </p>
                 `;
 
@@ -94,16 +97,6 @@
             document.getElementById("prevBtn").disabled = currentPage === 1;
             document.getElementById("nextBtn").disabled = endIndex >= newsItems.length;
             document.getElementById("pageNum").textContent = currentPage;
-        }
-
-        function toggleReadMore(button, fullText) {
-            const parent = button.parentElement;
-            if (button.textContent === "Ver más") {
-                parent.innerHTML = `<p>${fullText} <button onclick="toggleReadMore(this, '${fullText.replace(/'/g, "\\'")}')">Ver menos</button></p>`;
-            } else {
-                parent.innerHTML = `<p class="short-text">${fullText.substring(0, 150)}... 
-                    <button onclick="toggleReadMore(this, '${fullText.replace(/'/g, "\\'")}')">Ver más</button></p>`;
-            }
         }
 
         function nextPage() {
